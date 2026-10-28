@@ -34,16 +34,14 @@ class YouTubeScraper:
         print(f"\n🎬 Scraping YouTube channel: {channel_url}")
         print(f"📊 Fetching up to {max_videos} videos...")
 
-        # Using the popular YouTube Scraper actor
-        # Actor ID: streamers/youtube-scraper or bernardo/youtube-scraper
-        actor_id = "bernardo/youtube-scraper"
+        # bernardo/youtube-scraper was removed from Apify (404).
+        # This Actor takes a channel URL and returns one row per video with its transcript.
+        actor_id = "shephouse~youtube-transcript-scraper-bulk"
 
         # Prepare input for the actor
         actor_input = {
             "startUrls": [{"url": channel_url}],
-            "maxResults": max_videos,
-            "searchType": "video",
-            "getVideoTranscript": True,  # Enable transcript fetching
+            "maxTranscripts": max_videos,
         }
 
         # Run the actor
@@ -149,13 +147,15 @@ class YouTubeScraper:
         formatted_videos = []
 
         for video in videos:
+            if video.get("status", "OK") != "OK":
+                continue  # e.g. NO_CAPTIONS rows carry no transcript
             formatted_video = {
                 "title": video.get("title", "Unknown Title"),
                 "url": video.get("url", ""),
-                "video_id": video.get("id", ""),
+                "video_id": video.get("videoId", video.get("id", "")),
                 "description": video.get("description", ""),
-                "transcript": video.get("transcript", ""),
-                "duration": video.get("duration", ""),
+                "transcript": video.get("text", video.get("transcript", "")),
+                "duration": video.get("lengthSeconds", video.get("duration", "")),
                 "view_count": video.get("viewCount", 0),
                 "published_date": video.get("date", "")
             }

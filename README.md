@@ -131,7 +131,7 @@ While in the chat interface, you can use:
 
 - [Gemini File Search Documentation](https://ai.google.dev/gemini-api/docs/file-search)
 - [Apify Documentation](https://docs.apify.com/)
-- [YouTube Scraper Actor](https://apify.com/bernardo/youtube-scraper)
+- [YouTube Transcript Scraper Actor](https://apify.com/shephouse/youtube-transcript-scraper-bulk)
 
 ## License
 
