@@ -34,16 +34,17 @@ class YouTubeScraper:
         print(f"\n🎬 Scraping YouTube channel: {channel_url}")
         print(f"📊 Fetching up to {max_videos} videos...")
 
-        # Using the popular YouTube Scraper actor
-        # Actor ID: streamers/youtube-scraper or bernardo/youtube-scraper
-        actor_id = "bernardo/youtube-scraper"
+        # Using the YouTube Transcripts actor in channel mode
+        # Actor ID: johnvc/YoutubeTranscripts (the API path uses "~")
+        actor_id = "johnvc~YoutubeTranscripts"
 
         # Prepare input for the actor
         actor_input = {
-            "startUrls": [{"url": channel_url}],
-            "maxResults": max_videos,
-            "searchType": "video",
-            "getVideoTranscript": True,  # Enable transcript fetching
+            "channel": channel_url,
+            "max_videos": max_videos,
+            "channel_transcripts": True,  # Enable transcript fetching
+            "include_extended_metadata": True,  # Adds upload_date
+            "output_formats": ["text"],
         }
 
         # Run the actor
@@ -72,6 +73,8 @@ class YouTubeScraper:
         # Get the results
         print("📥 Fetching results...")
         videos = self._get_dataset_items(dataset_id)
+        # Keep transcript rows only (channel listing rows have no text)
+        videos = [video for video in videos if video.get("text")]
 
         print(f"✅ Successfully scraped {len(videos)} videos!")
         return videos[:max_videos]
@@ -152,12 +155,12 @@ class YouTubeScraper:
             formatted_video = {
                 "title": video.get("title", "Unknown Title"),
                 "url": video.get("url", ""),
-                "video_id": video.get("id", ""),
+                "video_id": video.get("video_id", ""),
                 "description": video.get("description", ""),
-                "transcript": video.get("transcript", ""),
-                "duration": video.get("duration", ""),
-                "view_count": video.get("viewCount", 0),
-                "published_date": video.get("date", "")
+                "transcript": video.get("text", ""),
+                "duration": video.get("video_duration_seconds", ""),
+                "view_count": video.get("view_count") or 0,
+                "published_date": video.get("upload_date", "")
             }
             formatted_videos.append(formatted_video)
 
