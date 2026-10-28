@@ -34,16 +34,14 @@ class YouTubeScraper:
         print(f"\n🎬 Scraping YouTube channel: {channel_url}")
         print(f"📊 Fetching up to {max_videos} videos...")
 
-        # Using the popular YouTube Scraper actor
-        # Actor ID: streamers/youtube-scraper or bernardo/youtube-scraper
-        actor_id = "bernardo/youtube-scraper"
+        # bernardo/youtube-scraper was removed from Apify (404).
+        # This Actor takes a channel URL and returns one row per video with its transcript.
+        actor_id = "shephouse~youtube-transcript-scraper-bulk"
 
         # Prepare input for the actor
         actor_input = {
             "startUrls": [{"url": channel_url}],
-            "maxResults": max_videos,
-            "searchType": "video",
-            "getVideoTranscript": True,  # Enable transcript fetching
+            "maxTranscripts": max_videos,
         }
 
         # Run the actor
@@ -73,8 +71,15 @@ class YouTubeScraper:
         print("📥 Fetching results...")
         videos = self._get_dataset_items(dataset_id)
 
-        print(f"✅ Successfully scraped {len(videos)} videos!")
-        return videos[:max_videos]
+        # Videos without captions come back as {"status": "FAILED", "errorCode": ...}
+        # rows (not charged). Keep only rows that carry a transcript.
+        transcripts = [v for v in videos if v.get("status", "OK") == "OK"]
+        skipped = len(videos) - len(transcripts)
+        if skipped:
+            print(f"⚠️  Skipped {skipped} videos without captions")
+
+        print(f"✅ Successfully scraped {len(transcripts)} videos!")
+        return transcripts[:max_videos]
 
     def _wait_for_completion(self, run_id: str, timeout: int = 600):
         """
@@ -149,13 +154,15 @@ class YouTubeScraper:
         formatted_videos = []
 
         for video in videos:
+            if video.get("status", "OK") != "OK":
+                continue  # e.g. NO_CAPTIONS rows carry no transcript
             formatted_video = {
                 "title": video.get("title", "Unknown Title"),
                 "url": video.get("url", ""),
-                "video_id": video.get("id", ""),
+                "video_id": video.get("videoId", video.get("id", "")),
                 "description": video.get("description", ""),
-                "transcript": video.get("transcript", ""),
-                "duration": video.get("duration", ""),
+                "transcript": video.get("text", video.get("transcript", "")),
+                "duration": video.get("lengthSeconds", video.get("duration", "")),
                 "view_count": video.get("viewCount", 0),
                 "published_date": video.get("date", "")
             }
