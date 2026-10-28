@@ -117,6 +117,7 @@ While in the chat interface, you can use:
 ### "No transcripts available"
 - Not all videos have transcripts. Try a different channel or fewer videos
 - Some channels disable automatic captions
+- Videos without captions are skipped automatically (the Actor does not charge for them)
 
 ### "Actor run failed"
 - Check your Apify API token is valid

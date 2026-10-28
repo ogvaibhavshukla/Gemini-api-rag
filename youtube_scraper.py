@@ -71,8 +71,15 @@ class YouTubeScraper:
         print("📥 Fetching results...")
         videos = self._get_dataset_items(dataset_id)
 
-        print(f"✅ Successfully scraped {len(videos)} videos!")
-        return videos[:max_videos]
+        # Videos without captions come back as {"status": "FAILED", "errorCode": ...}
+        # rows (not charged). Keep only rows that carry a transcript.
+        transcripts = [v for v in videos if v.get("status", "OK") == "OK"]
+        skipped = len(videos) - len(transcripts)
+        if skipped:
+            print(f"⚠️  Skipped {skipped} videos without captions")
+
+        print(f"✅ Successfully scraped {len(transcripts)} videos!")
+        return transcripts[:max_videos]
 
     def _wait_for_completion(self, run_id: str, timeout: int = 600):
         """
